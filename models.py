@@ -34,6 +34,8 @@ class Trade(db.Model):
             "exit": self.exit_price,
             "pnl": self.pnl,
             "status": self.status,
+            "partial_booked": self.partial_booked,
+            "trailing_sl": self.trailing_sl,
             "entry_time": self.entry_time.strftime("%H:%M:%S") if self.entry_time else None,
             "exit_time": self.exit_time.strftime("%H:%M:%S") if self.exit_time else None,
             "entry_unix": int(self.entry_time.replace(tzinfo=timezone.utc).timestamp()) if self.entry_time else None,

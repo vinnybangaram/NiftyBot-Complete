@@ -67,13 +67,14 @@ def get_data():
     # Exit Check (Always running if active, but can check anyway)
     check_exit(nifty_price)
 
+    oi = analyze_oi(atm)
+    support = oi["support"]
+    resistance = oi["resistance"]
+
     # Entry Logic (Only if system is RUNNING)
     if trading_active:
 
         signal = generate_signal(df)
-        oi = analyze_oi(atm)
-        support = oi["support"]
-        resistance = oi["resistance"]
 
         ema20 = df["EMA20"].iloc[-1]
         ema50 = df["EMA50"].iloc[-1]
@@ -221,13 +222,18 @@ def get_data():
         'EMA20': 'ema20', 'EMA50': 'ema50'
     })
 
+    active_trade = Trade.query.filter_by(status="OPEN").first()
+    active_trade_data = active_trade.to_dict() if active_trade else None
+
     return jsonify({
         "price": round(float(nifty_price), 2),
         "atm": atm,
+        "oi_data": oi,
         "signal": signal_to_return,
         "trading_active": trading_active,
         "awaiting_confirmation": awaiting_confirmation,
         "pending_trade": pending_trade,
+        "active_trade": active_trade_data,
         "report": report,
         "chart_data": chart_df[['time', 'open', 'high', 'low', 'close', 'ema20', 'ema50']].to_dict(orient="records"),
         "interval": interval

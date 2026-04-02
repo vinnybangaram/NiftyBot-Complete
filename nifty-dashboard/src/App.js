@@ -11,12 +11,14 @@ import {
   Cell,
   Brush
 } from "recharts";
+import OptionChainModal from './OptionChainModal';
 
 const App = () => {
   const [data, setData] = useState(null);
   const [exportDate, setExportDate] = useState(new Date().toISOString().split('T')[0]);
   const [interval, setIntervalVal] = useState("5m");
   const [viewport, setViewport] = useState({ start: 0, end: 0 });
+  const [showOptionChain, setShowOptionChain] = useState(false);
 
   useEffect(() => {
     const fetchLoop = async () => {
@@ -93,6 +95,12 @@ const App = () => {
 
   return (
     <div className="min-vh-100 font-monospace" style={{background: 'transparent'}}>
+      <OptionChainModal 
+        isOpen={showOptionChain} 
+        onClose={() => setShowOptionChain(false)} 
+        currentPrice={data?.price} 
+        oiData={data?.oi_data}
+      />
       {/* Signature Modal */}
       {data.awaiting_confirmation && data.pending_trade && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: 'blur(8px)', zIndex: 1060 }}>
@@ -265,8 +273,7 @@ const App = () => {
                     <h5 className="fw-bold ls-2 text-uppercase text-secondary mb-1">Engine Control</h5>
                     <div className="opacity-50 small font-monospace">SYSTEM DIRECTIVE</div>
                 </div>
-                
-                <div className="d-grid gap-4 mt-auto mb-5">
+                <div className="d-grid gap-4 mt-auto mb-4">
                     <button 
                         onClick={() => fetch(`http://127.0.0.1:5000/${data.trading_active ? "stop" : "start"}`, {method: "POST"})}
                         className={`btn btn-lg py-4 fw-black neon-btn ${data.trading_active ? 'neon-danger' : 'neon-success'}`}
@@ -279,6 +286,59 @@ const App = () => {
                     <button onClick={handleClear} className="btn py-2 text-danger fw-bold glass-btn border-0 shadow-none hover-glow">
                         <i className="bi bi-trash3-fill me-2"></i>PURGE MEMORY
                     </button>
+                </div>
+
+                <div className="py-2 border-top border-light border-opacity-10 mb-3">
+                    <button 
+                        className="btn w-100 py-2 mb-3 fw-bold glass-btn text-info border border-info border-opacity-25" 
+                        onClick={() => setShowOptionChain(true)}
+                    >
+                        <i className="bi bi-list-columns-reverse me-2"></i>OPTION CHAIN MATRIX
+                    </button>
+                    <div className="d-flex justify-content-between mb-1">
+                        <span className="text-secondary small fw-bold font-monospace">SPOT PRICE</span>
+                        <span className="text-white fw-bold font-monospace">{data.price}</span>
+                    </div>
+                    {data.oi_data && (
+                        <>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small fw-bold font-monospace">PCR</span>
+                                <span className={`fw-bold font-monospace ${parseFloat(data.oi_data.pcr) >= 1 ? 'text-success' : 'text-danger'}`}>{parseFloat(data.oi_data.pcr).toFixed(2)}</span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small fw-bold font-monospace">CE : PE OI</span>
+                                <span className="fw-bold text-info font-monospace">
+                                    {(data.oi_data.ce_oi_change/100000).toFixed(1)}M : {(data.oi_data.pe_oi_change/100000).toFixed(1)}M
+                                </span>
+                            </div>
+                        </>
+                    )}
+                    
+                    <div className="mt-3 mb-2 x-small fw-bold text-uppercase text-secondary ls-2"><i className="bi bi-crosshair me-1"></i> Trailing Matrix</div>
+                    {data.active_trade ? (
+                        <>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small font-monospace">SL</span>
+                                <span className="text-danger fw-bold font-monospace">{data.active_trade.sl}</span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small font-monospace">TSL 1 <span className="opacity-50">(Original)</span></span>
+                                <span className="text-warning fw-bold font-monospace text-opacity-75">{data.active_trade.trailing_sl || 'PENDING'}</span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small font-monospace">TSL 2 <span className="opacity-50">(Partial)</span></span>
+                                <span className="text-info fw-bold font-monospace text-opacity-75">{data.active_trade.partial_booked ? data.active_trade.trailing_sl : 'LOCKED'}</span>
+                            </div>
+                            <div className="d-flex justify-content-between mb-1">
+                                <span className="text-secondary small font-monospace">TSL 3 <span className="opacity-50">(Runner)</span></span>
+                                <span className="text-success fw-bold font-monospace text-opacity-50">LOCKED</span>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-2 text-secondary font-monospace small opacity-50 border border-secondary border-opacity-25 rounded mt-2" style={{borderStyle: 'dashed !important'}}>
+                            NO ACTIVE TRADE
+                        </div>
+                    )}
                 </div>
                 
                 <div className="border-top border-light border-opacity-10 pt-4 mt-auto">
