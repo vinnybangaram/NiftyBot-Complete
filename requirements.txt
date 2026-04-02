@@ -7,7 +7,8 @@ kiteconnect
 schedule
 flask
 flask-cors
+flask-sqlalchemy
 requests
-openpyxl
+twilio
 gunicorn
-flask_sqlalchemy
+openpyxl
