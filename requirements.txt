@@ -10,3 +10,4 @@ flask-cors
 requests
 openpyxl
 gunicorn
+flask_sqlalchemy
