@@ -16,6 +16,12 @@ class Trade(db.Model):
     status = db.Column(db.String(20), default="OPEN") # OPEN, TARGET HIT, SL HIT, MANUAL EXIT
     entry_time = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     exit_time = db.Column(db.DateTime)
+    
+    # 🌟 Advanced Execution Management
+    partial_booked = db.Column(db.Boolean, default=False)
+    realized_partial_pnl = db.Column(db.Float, default=0.0)
+    active_multiplier = db.Column(db.Float, default=1.0)
+    trailing_sl = db.Column(db.Float, nullable=True)
 
     def to_dict(self):
         return {
