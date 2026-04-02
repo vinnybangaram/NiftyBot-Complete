@@ -23,6 +23,10 @@ from execution.trade_tracker import (
     manual_exit_all_trades
 )
 
+
+
+
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -44,6 +48,21 @@ pending_pullback = None
 # Initialize Database
 with app.app_context():
     db.create_all()
+    
+@app.route("/")
+def home():
+    return jsonify({
+        "message": "Nifty Bot API is LIVE 🚀",
+        "endpoints": [
+            "/data",
+            "/start",
+            "/stop",
+            "/trades",
+            "/export",
+            "/confirm",
+            "/reject"
+        ]
+    })
 
 
 @app.route("/data")
