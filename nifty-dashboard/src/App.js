@@ -242,9 +242,9 @@ const App = () => {
                   </div>
                 </div>
               </div>
-              <div className="card-body p-3" style={{ height: "350px" }}>
+              <div className="card-body p-3" style={{ height: "400px" }}>
                 {data?.chart_processed?.length > 0 && (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <ComposedChart data={data.chart_processed}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis dataKey="displayTime" stroke="rgba(255,255,255,0.3)" fontSize={10} tickMargin={10} minTickGap={30} axisLine={false} tickLine={false} />
@@ -274,7 +274,7 @@ const App = () => {
           {/* Side Controls Area */}
           <div className="col-lg-3">
             <div className="card glass-panel border-0 shadow-lg h-100 flex-column justify-content-between p-4">
-              <div className="text-center mb-5">
+              <div className="text-center mb-0">
                 <h5 className="fw-bold ls-2 text-uppercase text-secondary mb-1">Engine Control</h5>
                 <div className="opacity-50 small font-monospace">SYSTEM DIRECTIVE</div>
               </div>
