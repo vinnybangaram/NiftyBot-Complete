@@ -242,24 +242,26 @@ const App = () => {
                   </div>
                 </div>
               </div>
-              <div className="card-body p-3" style={{ height: "550px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={data.chart_processed}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="displayTime" stroke="rgba(255,255,255,0.3)" fontSize={10} tickMargin={10} minTickGap={30} axisLine={false} tickLine={false} />
-                    <YAxis domain={[visiblePrices.min, visiblePrices.max]} orientation="right" stroke="rgba(255,255,255,0.5)" fontSize={10} tickFormatter={(val) => Math.round(val)} allowDataOverflow={true} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "rgba(10, 15, 30, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff", backdropFilter: "blur(10px)" }} itemStyle={{ fontSize: "12px" }} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '5 5' }} />
-                    <Bar dataKey="wick" barSize={2} isAnimationActive={false}>
-                      {data.chart_processed?.map((entry, index) => <Cell key={`wick-${index}`} fill={entry.color} />)}
-                    </Bar>
-                    <Bar dataKey="body" barSize={8} radius={[4, 4, 4, 4]} isAnimationActive={false}>
-                      {data.chart_processed?.map((entry, index) => <Cell key={`body-${index}`} fill={entry.color} />)}
-                    </Bar>
-                    <Line type="monotone" dataKey="ema20" stroke="#00f2fe" strokeWidth={2} dot={false} isAnimationActive={false} style={{ filter: 'drop-shadow(0 0 5px rgba(0, 242, 254, 0.5))' }} />
-                    <Line type="monotone" dataKey="ema50" stroke="#f093fb" strokeWidth={2} dot={false} isAnimationActive={false} style={{ filter: 'drop-shadow(0 0 5px rgba(240, 147, 251, 0.5))' }} />
-                    <Brush dataKey="displayTime" height={30} stroke="rgba(255,255,255,0.1)" fill="rgba(0,0,0,0.2)" startIndex={viewport.start} endIndex={viewport.end} onChange={(e) => setViewport({ start: e.startIndex, end: e.endIndex })} />
-                  </ComposedChart>
-                </ResponsiveContainer>
+              <div className="card-body p-3" style={{ height: "350px" }}>
+                {data?.chart_processed?.length > 0 && (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <ComposedChart data={data.chart_processed}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis dataKey="displayTime" stroke="rgba(255,255,255,0.3)" fontSize={10} tickMargin={10} minTickGap={30} axisLine={false} tickLine={false} />
+                      <YAxis domain={[visiblePrices.min, visiblePrices.max]} orientation="right" stroke="rgba(255,255,255,0.5)" fontSize={10} tickFormatter={(val) => Math.round(val)} allowDataOverflow={true} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "rgba(10, 15, 30, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#fff", backdropFilter: "blur(10px)" }} itemStyle={{ fontSize: "12px" }} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                      <Bar dataKey="wick" barSize={2} isAnimationActive={false}>
+                        {data.chart_processed?.map((entry, index) => <Cell key={`wick-${index}`} fill={entry.color} />)}
+                      </Bar>
+                      <Bar dataKey="body" barSize={8} radius={[4, 4, 4, 4]} isAnimationActive={false}>
+                        {data.chart_processed?.map((entry, index) => <Cell key={`body-${index}`} fill={entry.color} />)}
+                      </Bar>
+                      <Line type="monotone" dataKey="ema20" stroke="#00f2fe" strokeWidth={2} dot={false} isAnimationActive={false} style={{ filter: 'drop-shadow(0 0 5px rgba(0, 242, 254, 0.5))' }} />
+                      <Line type="monotone" dataKey="ema50" stroke="#f093fb" strokeWidth={2} dot={false} isAnimationActive={false} style={{ filter: 'drop-shadow(0 0 5px rgba(240, 147, 251, 0.5))' }} />
+                      <Brush dataKey="displayTime" height={30} stroke="rgba(255,255,255,0.1)" fill="rgba(0,0,0,0.2)" startIndex={viewport.start} endIndex={viewport.end} onChange={(e) => setViewport({ start: e.startIndex, end: e.endIndex })} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                )}
               </div>
               <div className="card-footer bg-transparent border-top border-light border-opacity-10 py-3 d-flex flex-wrap gap-4 text-xs font-monospace opacity-75">
                 <span className="fw-bold neon-text-primary"><i className="bi bi-record-circle-fill me-1" style={{ fontSize: '8px' }}></i> EMA-20</span>
