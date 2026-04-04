@@ -143,7 +143,7 @@ const App = () => {
           <div className="container-fluid">
             <div className="d-flex align-items-center">
               <span className="navbar-brand fw-black fs-3 ls-1 me-4 mb-0 text-white" style={{ letterSpacing: '2px' }}>
-                NIFTY<span className="neon-text-primary fw-bold">BOT</span> <span className="fs-6 opacity-50 ms-1 fw-light">AI</span>
+                NIFTY<span className="neon-text-primary fw-bold">BOT</span> <span className="fs-6 opacity-50 ms-1 fw-light">AI Paper Trading</span>
               </span>
               <span className={`badge rounded-pill px-3 py-2 ms-2 ${data.trading_active ? 'neon-success' : 'neon-danger'} shadow-sm`}>
                 <i className={`bi ${data.trading_active ? 'bi-radar' : 'bi-pause-circle-fill'} me-2`}></i>
