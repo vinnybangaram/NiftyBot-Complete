@@ -25,7 +25,7 @@ const App = () => {
   useEffect(() => {
     const fetchLoop = async () => {
       try {
-        // const res = await fetch(`http://127.0.0.1:5000/data?date=${exportDate}&interval=${interval}`);
+
         const res = await fetch(`${API}/data?date=${exportDate}&interval=${interval}`);
         const json = await res.json();
 
@@ -84,7 +84,7 @@ const App = () => {
 
   const handleClear = async () => {
     if (window.confirm("Are you sure you want to clear all trade history?")) {
-      await fetch("http://127.0.0.1:5000/clear", { method: "POST" });
+      await fetch(`${API}/clear`, { method: "POST" });
       window.location.reload();
     }
   };
@@ -129,8 +129,8 @@ const App = () => {
                 </div>
               </div>
               <div className="modal-footer border-top border-secondary border-opacity-25 justify-content-center gap-3 pt-4">
-                <button onClick={() => fetch("http://127.0.0.1:5000/confirm", { method: "POST" })} className="btn neon-success btn-lg px-5 fw-bold shadow">EXECUTE</button>
-                <button onClick={() => fetch("http://127.0.0.1:5000/reject", { method: "POST" })} className="btn neon-danger btn-lg px-5 fw-bold shadow">DISCARD</button>
+                <button onClick={() => fetch(`${API}/confirm`, { method: "POST" })} className="btn neon-success btn-lg px-5 fw-bold shadow">EXECUTE</button>
+                <button onClick={() => fetch(`${API}/reject`, { method: "POST" })} className="btn neon-danger btn-lg px-5 fw-bold shadow">DISCARD</button>
               </div>
             </div>
           </div>
@@ -280,7 +280,7 @@ const App = () => {
               </div>
               <div className="d-grid gap-4 mt-auto mb-4">
                 <button
-                  onClick={() => fetch(`http://127.0.0.1:5000/${data.trading_active ? "stop" : "start"}`, { method: "POST" })}
+                  onClick={() => fetch(`${API}/${data.trading_active ? "stop" : "start"}`, { method: "POST" })}
                   className={`btn btn-lg py-4 fw-black neon-btn ${data.trading_active ? 'neon-danger' : 'neon-success'}`}
                   style={{ fontSize: '1.2rem', letterSpacing: '3px' }}
                 >
@@ -351,7 +351,7 @@ const App = () => {
                   <label className="x-small text-secondary fw-bold text-uppercase mb-2 ls-1 d-block"><i className="bi bi-calendar-event me-2"></i>Date Pointer</label>
                   <input type="date" className="form-control form-control-lg text-white border-0 shadow-none font-monospace" value={exportDate} onChange={(e) => setExportDate(e.target.value)} style={{ background: 'rgba(0,0,0,0.3)' }} />
                 </div>
-                <button className="btn w-100 py-3 fw-bold text-dark neon-btn" style={{ background: 'linear-gradient(45deg, #00c6fb, #005bea)' }} onClick={() => window.open(`http://127.0.0.1:5000/export?date=${exportDate}`)}>
+                <button className="btn w-100 py-3 fw-bold text-dark neon-btn" style={{ background: 'linear-gradient(45deg, #00c6fb, #005bea)' }} onClick={() => window.open(`${API}/export?date=${exportDate}`)}>
                   <i className="bi bi-file-earmark-excel-fill me-2"></i>EXTRACT DATA
                 </button>
               </div>
