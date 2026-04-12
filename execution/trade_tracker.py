@@ -86,32 +86,41 @@ def send_whatsapp_message(msg):
     except Exception as e:
         print(f"❌ WhatsApp Alert Failed: {e}")
 
-def check_entry(signal, entry_price, sl, target, trend="N/A"):
+def check_entry(signal, entry_price, sl, target, trend="N/A", lots=1, user_email=None):
 
     # ✅ Detect trade type
     if "CALL" in signal:
         trade_type = "CALL"
-
+        tsl1 = entry_price + 30
+        tsl2 = entry_price + 50
+        tsl3 = entry_price + 80
     elif "PUT" in signal:
         trade_type = "PUT"
-
+        tsl1 = entry_price - 30
+        tsl2 = entry_price - 50
+        tsl3 = entry_price - 80
     else:
         return
 
     new_trade = Trade(
+        user_email=user_email,
         type=trade_type,
         signal=signal,
         entry_price=float(entry_price),
+        num_lots=int(lots),
         sl=float(sl),
         target=float(target),
+        tsl_1=tsl1,
+        tsl_2=tsl2,
+        tsl_3=tsl3,
         status="OPEN",
-        entry_time=datetime.utcnow()
+        entry_time=datetime.now(timezone.utc)
     )
 
     db.session.add(new_trade)
     db.session.commit()
 
-    print(f"✅ Multi-Trade Entered: {trade_type} @ {entry_price}")
+    print(f"✅ Multi-Trade Entered: {trade_type} @ {entry_price} ({lots} Lots) for {user_email}")
 
     # 📲 WhatsApp Alert (Pro Upgrade)
     msg = f"""
@@ -141,7 +150,8 @@ def check_exit(current_price):
     current_price = float(current_price)
 
     for trade in active_trades:
-
+        # Lots and multipliers
+        LOTS = trade.num_lots or 1
         entry = trade.entry_price
         trade_type = trade.type
         sl = trade.sl
@@ -151,18 +161,22 @@ def check_exit(current_price):
         # 🚀 CALL
         # =========================
         if trade_type == "CALL":
-            
             pnl_modifier = getattr(trade, 'active_multiplier', 1.0)
             realized = getattr(trade, 'realized_partial_pnl', 0.0)
+
+            # 🎯 TSL GOALS TRACKING
+            if current_price >= trade.tsl_1: trade.hit_tsl1 = True
+            if current_price >= trade.tsl_2: trade.hit_tsl2 = True
+            if current_price >= trade.tsl_3: trade.hit_tsl3 = True
 
             # 🎯 PARTIAL PROFIT (+30 pts)
             if not getattr(trade, 'partial_booked', False) and (current_price - entry) >= 30:
                 trade.partial_booked = True
-                trade.realized_partial_pnl = round(30 * LOT_SIZE * 0.5, 2)
+                trade.realized_partial_pnl = round(30 * LOT_SIZE * LOTS * 0.5, 2)
                 trade.active_multiplier = 0.5
                 trade.sl = entry
                 trade.trailing_sl = current_price - 20
-                print(f"💰 CALL Partial Profit Booked. SL moved to {trade.sl}. TSL matches.")
+                print(f"💰 CALL Partial Profit Booked. SL moved to {trade.sl}.")
 
             # Update Trailing SL if partial booked
             if getattr(trade, 'partial_booked', False):
@@ -171,38 +185,44 @@ def check_exit(current_price):
 
             # 🎯 TARGET
             if current_price >= target:
-                pnl = (current_price - entry) * LOT_SIZE * pnl_modifier + realized
+                pnl = (current_price - entry) * LOT_SIZE * LOTS * pnl_modifier + realized
                 trade.exit_price = current_price
                 trade.pnl = round(pnl, 2)
                 trade.status = "TARGET HIT"
-                trade.exit_time = datetime.utcnow()
-                print(f"🎯 CALL Target Hit (ID: {trade.id}): {pnl}")
+                trade.exit_time = datetime.now(timezone.utc)
 
             # 🛑 SL / Trailing SL
             elif current_price <= (trade.trailing_sl if getattr(trade, 'partial_booked', False) else trade.sl):
-                pnl = (current_price - entry) * LOT_SIZE * pnl_modifier + realized
+                pnl = (current_price - entry) * LOT_SIZE * LOTS * pnl_modifier + realized
                 trade.exit_price = current_price
                 trade.pnl = round(pnl, 2)
-                trade.status = "SL HIT" if not getattr(trade, 'partial_booked', False) else "TSL HIT"
-                trade.exit_time = datetime.utcnow()
-                print(f"🛑 CALL SL/TSL Hit (ID: {trade.id}): {pnl}")
+                if not trade.partial_booked:
+                    trade.status = "SL HIT"
+                    trade.hit_sl = True
+                else:
+                    trade.status = "TSL HIT"
+                trade.exit_time = datetime.now(timezone.utc)
 
         # =========================
         # 🔻 PUT
         # =========================
         elif trade_type == "PUT":
-            
             pnl_modifier = getattr(trade, 'active_multiplier', 1.0)
             realized = getattr(trade, 'realized_partial_pnl', 0.0)
+
+            # 🎯 TSL GOALS TRACKING
+            if current_price <= trade.tsl_1: trade.hit_tsl1 = True
+            if current_price <= trade.tsl_2: trade.hit_tsl2 = True
+            if current_price <= trade.tsl_3: trade.hit_tsl3 = True
 
             # 🎯 PARTIAL PROFIT (+30 pts)
             if not getattr(trade, 'partial_booked', False) and (entry - current_price) >= 30:
                 trade.partial_booked = True
-                trade.realized_partial_pnl = round(30 * LOT_SIZE * 0.5, 2)
+                trade.realized_partial_pnl = round(30 * LOT_SIZE * LOTS * 0.5, 2)
                 trade.active_multiplier = 0.5
                 trade.sl = entry
                 trade.trailing_sl = current_price + 20
-                print(f"💰 PUT Partial Profit Booked. SL moved to {trade.sl}. TSL matches.")
+                print(f"💰 PUT Partial Profit Booked. SL moved to {trade.sl}.")
 
             # Update Trailing SL if partial booked
             if getattr(trade, 'partial_booked', False):
@@ -211,20 +231,23 @@ def check_exit(current_price):
 
             # 🎯 TARGET
             if current_price <= target:
-                pnl = (entry - current_price) * LOT_SIZE * pnl_modifier + realized
+                pnl = (entry - current_price) * LOT_SIZE * LOTS * pnl_modifier + realized
                 trade.exit_price = current_price
                 trade.pnl = round(pnl, 2)
                 trade.status = "TARGET HIT"
-                trade.exit_time = datetime.utcnow()
-                print(f"🎯 PUT Target Hit (ID: {trade.id}): {pnl}")
+                trade.exit_time = datetime.now(timezone.utc)
 
             # 🛑 SL / Trailing SL
             elif current_price >= (trade.trailing_sl if getattr(trade, 'partial_booked', False) else trade.sl):
-                pnl = (entry - current_price) * LOT_SIZE * pnl_modifier + realized
+                pnl = (entry - current_price) * LOT_SIZE * LOTS * pnl_modifier + realized
                 trade.exit_price = current_price
                 trade.pnl = round(pnl, 2)
-                trade.status = "SL HIT" if not getattr(trade, 'partial_booked', False) else "TSL HIT"
-                trade.exit_time = datetime.utcnow()
+                if not trade.partial_booked:
+                    trade.status = "SL HIT"
+                    trade.hit_sl = True
+                else:
+                    trade.status = "TSL HIT"
+                trade.exit_time = datetime.now(timezone.utc)
                 print(f"🛑 PUT SL/TSL Hit (ID: {trade.id}): {pnl}")
 
     db.session.commit()
@@ -262,8 +285,13 @@ def manual_exit_all_trades(current_price):
 # =========================
 # 📊 REPORT (LIVE + CLOSED)
 # =========================
-def end_of_day_report(current_price=None, filter_date=None):
+def end_of_day_report(current_price=None, filter_date=None, user_email=None):
     query = Trade.query
+    
+    # 🕵️ User Filter
+    if user_email:
+        query = query.filter(Trade.user_email == user_email)
+        
     if filter_date:
         try:
             target_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
@@ -275,17 +303,17 @@ def end_of_day_report(current_price=None, filter_date=None):
     total_pnl = 0
 
     for trade in all_trades:
-
         trade_dict = trade.to_dict()
+        LOTS = trade.num_lots or 1
 
         # Update P&L for open trades
         if trade.status == "OPEN" and current_price is not None:
             pnl_modifier = getattr(trade, 'active_multiplier', 1.0)
             realized = getattr(trade, 'realized_partial_pnl', 0.0)
             if trade.type == "CALL":
-                pnl = (current_price - trade.entry_price) * LOT_SIZE * pnl_modifier + realized
+                pnl = (current_price - trade.entry_price) * LOT_SIZE * LOTS * pnl_modifier + realized
             else:
-                pnl = (trade.entry_price - current_price) * LOT_SIZE * pnl_modifier + realized
+                pnl = (trade.entry_price - current_price) * LOT_SIZE * LOTS * pnl_modifier + realized
             trade_dict["pnl"] = round(pnl, 2)
 
         total_pnl += trade_dict["pnl"]
@@ -353,3 +381,8 @@ def export_filtered_to_excel(trades, date_str=None):
         summary.to_excel(writer, index=False, sheet_name="Summary")
 
     return filename
+
+    # In check_exit(), after trade.status = "TARGET HIT" / "SL HIT" / "TSL HIT"
+# Import and reset the global
+# import app
+# app.last_traded_trend = None
