@@ -41,7 +41,10 @@ from execution.trade_tracker import (
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key")
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, supports_credentials=True)
+
+# CORS Configuration for Production
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
 
 # Authentication Integration
 from auth import auth_bp, google_bp
