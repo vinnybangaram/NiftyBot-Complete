@@ -73,14 +73,19 @@ def get_active_trade_count():
 
 def send_whatsapp_message(msg):
     """Sends a WhatsApp alert via Twilio"""
-    account_sid = "YOUR_SID"
-    auth_token = "YOUR_TOKEN"
+    account_sid = os.getenv("TWILIO_SID")
+    auth_token = os.getenv("TWILIO_TOKEN")
+    target_num = os.getenv("TARGET_WHATSAPP_NUM")
+    
+    if not all([account_sid, auth_token, target_num]):
+        return # Skip if not configured
+        
     try:
         client = Client(account_sid, auth_token)
         client.messages.create(
             body=msg,
             from_='whatsapp:+14155238886',  # Twilio sandbox
-            to='whatsapp:+91XXXXXXXXXX'   # Replace with your number
+            to=f'whatsapp:{target_num}'
         )
         print("📲 WhatsApp Alert Sent Successfully")
     except Exception as e:

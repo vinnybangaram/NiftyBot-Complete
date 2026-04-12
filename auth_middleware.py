@@ -3,7 +3,7 @@ import jwt
 from flask import request, jsonify, session, current_app
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
-JWT_SECRET = os.getenv("SECRET_KEY", "super-secret-key")
+JWT_SECRET = os.getenv("SECRET_KEY")
 
 # List of routes that don't require authentication
 PUBLIC_ROUTES = [

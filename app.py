@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Strict Environment Variable Validation
+# Environment Variable Validation
 REQUIRED_ENV_VARS = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ADMIN_EMAIL", "SECRET_KEY"]
 for var in REQUIRED_ENV_VARS:
     if not os.getenv(var):
-        raise EnvironmentError(f"CRITICAL ERROR: {var} not set in .env file")
+        raise EnvironmentError(f"CRITICAL CONFIGURATION ERROR: Required environment variable '{var}' is missing.")
 
 from models import db, Trade
 from data.data_fetcher import get_nifty_data
