@@ -78,7 +78,7 @@ const App = () => {
 
     const timer = setInterval(fetchLoop, 5000);
     return () => clearInterval(timer);
-  }, [exportDate, interval, viewport.end]);
+  }, [exportDate, interval, viewport.end, isAuthenticated, user]);
 
   const visiblePrices = useMemo(() => {
     if (!data?.chart_processed) return { min: 22000, max: 23000 };
@@ -108,15 +108,6 @@ const App = () => {
     });
   };
 
-  const handleClear = async () => {
-    if (window.confirm("Are you sure you want to clear all trade history?")) {
-      await fetch(`${API}/clear`, { 
-        method: "POST",
-        credentials: 'include'
-      });
-      window.location.reload();
-    }
-  };
 
   const handleLogout = async () => {
     try {
