@@ -1,0 +1,185 @@
+trades = []
+active_trade = None
+
+
+def check_entry(signal, entry_price):
+
+    global active_trade
+
+    # 🚫 Prevent duplicate entries
+    if active_trade is not None:
+        return
+
+    # ✅ Detect trade type properly (VERY IMPORTANT FIX)
+    if "CALL" in signal:
+        trade_type = "CALL"
+
+    elif "PUT" in signal:
+        trade_type = "PUT"
+
+    else:
+        return
+
+    active_trade = {
+        "type": trade_type,   # ✅ clean type
+        "signal": signal,     # store original signal (EARLY / NORMAL)
+        "entry": entry_price,
+        "exit": None,
+        "pnl": 0,
+        "status": "OPEN"
+    }
+
+    print("✅ Trade Entered:", active_trade)
+
+
+def check_exit(current_price, sl, target):
+
+    LOT_SIZE = 65
+
+    global active_trade, trades
+
+    if active_trade is None:
+        return
+
+    entry = active_trade["entry"]
+    trade_type = active_trade["type"]
+
+    # =========================
+    # 🚀 CALL LOGIC
+    # =========================
+    if trade_type == "CALL":
+
+        if current_price >= target:
+            # pnl = current_price - entry
+            pnl = (current_price - entry) * LOT_SIZE
+
+            active_trade.update({
+                "exit": current_price,
+                "pnl": pnl,
+                "status": "TARGET HIT",
+                "reason": "TARGET"
+            })
+
+            trades.append(active_trade)
+            active_trade = None
+
+            print("🎯 CALL Target Hit:", pnl)
+
+        elif current_price <= sl:
+            pnl = current_price - entry
+
+            active_trade.update({
+                "exit": current_price,
+                "pnl": pnl,
+                "status": "SL HIT",
+                "reason": "SL"
+            })
+
+            trades.append(active_trade)
+            active_trade = None
+
+            print("🛑 CALL SL Hit:", pnl)
+
+    # =========================
+    # 🔻 PUT LOGIC
+    # =========================
+    elif trade_type == "PUT":
+
+        if current_price <= target:
+            # pnl = entry - current_price
+            pnl = (entry - current_price) * LOT_SIZE
+
+            active_trade.update({
+                "exit": current_price,
+                "pnl": pnl,
+                "status": "TARGET HIT",
+                "reason": "TARGET"
+            })
+
+            trades.append(active_trade)
+            active_trade = None
+
+            print("🎯 PUT Target Hit:", pnl)
+
+        elif current_price >= sl:
+            pnl = entry - current_price
+
+            active_trade.update({
+                "exit": current_price,
+                "pnl": pnl,
+                "status": "SL HIT",
+                "reason": "SL"
+            })
+
+            trades.append(active_trade)
+            active_trade = None
+
+            print("🛑 PUT SL Hit:", pnl)
+
+
+def end_of_day_report(current_price=None):
+
+    global trades, active_trade
+
+    report_trades = trades.copy()
+
+    # 🔥 ADD ACTIVE TRADE ALSO
+    if active_trade is not None:
+
+        entry = active_trade["entry"]
+
+        if "CALL" in active_trade["type"]:
+            pnl = current_price - entry
+        else:
+            pnl = entry - current_price
+
+        open_trade = active_trade.copy()
+        open_trade["pnl"] = round(pnl, 2)
+        open_trade["status"] = "OPEN"
+
+        report_trades.append(open_trade)
+
+    total_pnl = sum([t["pnl"] for t in report_trades])
+
+    return {
+        "total_trades": len(report_trades),
+        "total_pnl": round(total_pnl, 2),
+        "trades": report_trades
+    }
+
+
+# =========================
+# 📊 EXPORT TO EXCEL (FIXED)
+# =========================
+
+import pandas as pd
+from datetime import datetime
+
+
+def export_to_excel():
+
+    global trades
+
+    if not trades:
+        return "No trades to export"
+
+    df = pd.DataFrame(trades)
+
+    total_pnl = df["pnl"].sum()
+
+    filename = f"trade_report_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+
+    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+
+        df.to_excel(writer, index=False, sheet_name="Trades")
+
+        summary = pd.DataFrame({
+            "Metric": ["Total Trades", "Total P&L"],
+            "Value": [len(df), total_pnl]
+        })
+
+        summary.to_excel(writer, index=False, sheet_name="Summary")
+
+    print("📊 Excel Exported:", filename)
+
+    return filename

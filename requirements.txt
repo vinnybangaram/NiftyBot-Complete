@@ -1,0 +1,17 @@
+pandas
+numpy
+yfinance
+ta
+nsepython
+kiteconnect
+schedule
+flask
+flask-cors
+flask-sqlalchemy
+requests
+twilio
+gunicorn
+openpyxl
+flask-dance
+pyjwt
+python-dotenv
