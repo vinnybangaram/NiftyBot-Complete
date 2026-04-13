@@ -50,9 +50,9 @@ app.config.update(
 )
 
 # CORS Configuration for Production
-# Automatically trusting both local dev and the known Vercel production domain
-default_origins = "http://localhost:3000,https://nifty-bot-complete.vercel.app"
-origins = os.getenv("ALLOWED_ORIGINS", default_origins).split(",")
+# Automatically trusting both local dev and various Vercel subdomains
+default_origins = "http://localhost:3000,http://127.0.0.1:3000,https://nifty-bot-complete.vercel.app,https://nifty-bot-complete-git-main-vinnybangarams-projects.vercel.app"
+origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", default_origins).split(",")]
 CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
 
 print(f"CORS Allowed Origins: {origins}")
