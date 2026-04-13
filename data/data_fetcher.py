@@ -23,10 +23,10 @@ def get_nifty_data(interval="5m"):
                 return df
 
     except Exception as e:
-        print(f"⚠️ Live Feed Interrupted: {str(e)}")
+        print(f"Live Feed Interrupted: {str(e)}")
 
     # 2. Resilient Fallback: Simulation Engine (Ensures UI stability)
-    print("🔄 Activating Synthetic Data Stream (Simulation Mode)")
+    print("Activating Synthetic Data Stream (Simulation Mode)")
     
     # Generate 100 candles of realistic simulation
     now = datetime.now()

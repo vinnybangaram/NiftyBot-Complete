@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Login = () => {
-  const API = "http://localhost:5000";
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   const handleLogin = () => {
     window.location.href = `${API}/login/google`;
@@ -62,7 +62,7 @@ const Login = () => {
 
         <button 
           onClick={handleLogin}
-          className="btn btn-lg w-100 py-3 mb-4 d-flex align-items-center justify-content-center gap-3 glass-btn neon-border-primary"
+          className="btn btn-lg w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-3 glass-btn neon-border-primary"
           style={{ 
             background: 'rgba(255, 255, 255, 0.03)',
             transition: 'all 0.3s ease'
@@ -75,6 +75,20 @@ const Login = () => {
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
           <span className="fw-bold text-white ls-1">Continue with Google</span>
+        </button>
+
+        <button 
+          onClick={() => window.location.href = `${API}/dev-bypass`}
+          className="btn btn-sm w-100 py-2 mb-4 d-flex align-items-center justify-content-center gap-2"
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px dashed rgba(255, 255, 255, 0.2)',
+            color: 'rgba(255, 255, 255, 0.5)',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <i className="bi bi-code-slash"></i>
+          <span className="fw-bold x-small text-uppercase ls-1">Developer Bypass</span>
         </button>
 
         <div className="d-flex align-items-center gap-2 justify-content-center opacity-50">

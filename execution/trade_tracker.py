@@ -8,7 +8,7 @@ from twilio.rest import Client
 from config import LOT_SIZE
 COOLDOWN_SECONDS = 180
 MIN_MOVE = 40
-MIN_TREND_STRENGTH = 25
+MIN_TREND_STRENGTH = 15
 
 
 # =========================
@@ -46,8 +46,8 @@ def validate_trade(df, signal, entry, sl, target):
     candle_range = latest["High"] - latest["Low"]
     if candle_range > 0:
         strength_pct = (candle_body / candle_range) * 100
-        if strength_pct < 70:
-            return False, f"Weak Candle ({strength_pct:.1f}% Body < 70%)"
+        if strength_pct < 50:
+            return False, f"Weak Candle ({strength_pct:.1f}% Body < 50%)"
 
     # 5️⃣ Cooldown Check (180s)
     last_trade = Trade.query.order_by(Trade.entry_time.desc()).first()
@@ -87,7 +87,7 @@ def send_whatsapp_message(msg):
             from_='whatsapp:+14155238886',  # Twilio sandbox
             to=f'whatsapp:{target_num}'
         )
-        print("📲 WhatsApp Alert Sent Successfully")
+        print("WhatsApp Alert Sent Successfully")
     except Exception as e:
         print(f"❌ WhatsApp Alert Failed: {e}")
 
@@ -125,7 +125,7 @@ def check_entry(signal, entry_price, sl, target, trend="N/A", lots=1, user_email
     db.session.add(new_trade)
     db.session.commit()
 
-    print(f"✅ Multi-Trade Entered: {trade_type} @ {entry_price} ({lots} Lots) for {user_email}")
+    print(f"Multi-Trade Entered: {trade_type} @ {entry_price} ({lots} Lots) for {user_email}")
 
     # 📲 WhatsApp Alert (Pro Upgrade)
     msg = f"""
@@ -283,7 +283,7 @@ def manual_exit_all_trades(current_price):
         trade.exit_time = datetime.now(timezone.utc)
 
     db.session.commit()
-    print(f"🛑 Manual Exit performed for {count} trades.")
+    print(f"Manual Exit performed for {count} trades.")
     return count
 
 

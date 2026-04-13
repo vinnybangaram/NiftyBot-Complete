@@ -114,6 +114,22 @@ def callback():
     frontend_url = os.getenv("FRONTEND_URL", "https://nifty-bot-complete.vercel.app")
     return redirect(f"{frontend_url}?token={token}")
 
+@auth_bp.route("/dev-bypass")
+def dev_bypass():
+    if os.getenv("DEV_MODE") != "1":
+        return jsonify({"error": "Forbidden: Not in Development Mode"}), 403
+    
+    user_info = {
+        "email": "dev@niftybot.local",
+        "name": "Developer Admin",
+        "id": "dev-001"
+    }
+    token = create_token(user_info)
+    session["jwt_token"] = token
+    
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    return redirect(f"{frontend_url}?token={token}")
+
 @auth_bp.route("/logout")
 def logout():
     session.clear()
@@ -125,6 +141,14 @@ def logout():
 def me():
     # This will be protected by middleware, but we can double check here
     token = session.get("jwt_token") or request.headers.get("Authorization")
+    
+    if os.getenv("DEV_MODE") == "1" and not token:
+        return jsonify({"user": {
+            "email": "dev@niftybot.local",
+            "name": "Developer Admin",
+            "id": "dev-001"
+        }})
+
     if not token:
         return jsonify({"error": "Unauthorized"}), 401
     

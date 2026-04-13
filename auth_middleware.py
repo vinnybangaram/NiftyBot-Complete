@@ -29,6 +29,10 @@ def check_auth():
     if any(path == route or path.startswith(route + "/") for route in PUBLIC_ROUTES):
         return None
 
+    # Skip check if in DEV_MODE
+    if os.getenv("DEV_MODE") == "1":
+        return None
+
     # Skip check for internal Google OAuth routes
     if path.startswith("/login/google"):
         return None

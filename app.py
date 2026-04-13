@@ -55,7 +55,7 @@ default_origins = "http://localhost:3000,https://nifty-bot-complete.vercel.app"
 origins = os.getenv("ALLOWED_ORIGINS", default_origins).split(",")
 CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
 
-print(f"🌍 CORS Allowed Origins: {origins}")
+print(f"CORS Allowed Origins: {origins}")
 
 # Authentication Integration
 from auth import auth_bp, google_bp
@@ -128,7 +128,7 @@ def set_settings():
     max_trades_today = int(data.get("max_trades", 3))
     num_lots_to_trade = int(data.get("lots", 1))
     
-    print(f"⚙️ Settings Updated: Max Trades = {max_trades_today}, Lots = {num_lots_to_trade}")
+    print(f"Settings Updated: Max Trades = {max_trades_today}, Lots = {num_lots_to_trade}")
     return jsonify({
         "status": "ok", 
         "max_trades_today": max_trades_today,
@@ -210,7 +210,7 @@ def get_data():
                 if "CALL" in pb_sig:
                     if nifty_price <= pb_price:
                         is_triggered = True
-                        candidate_signal = "BUY CALL 🚀 (A+ PULLBACK ENTRY)"
+                        candidate_signal = "BUY CALL (A+ PULLBACK ENTRY)"
                         # New SL and Target based on pullback price
                         candidate_entry = (nifty_price, nifty_price - 30, nifty_price + 60)
                     elif nifty_price >= br_price + 25:
@@ -218,16 +218,16 @@ def get_data():
                 elif "PUT" in pb_sig:
                     if nifty_price >= pb_price:
                         is_triggered = True
-                        candidate_signal = "BUY PUT 🔻 (A+ PULLBACK ENTRY)"
+                        candidate_signal = "BUY PUT (A+ PULLBACK ENTRY)"
                         candidate_entry = (nifty_price, nifty_price + 30, nifty_price - 60)
                     elif nifty_price <= br_price - 25:
                         is_missed = True
                         
                 if is_missed:
                     pending_pullback = None
-                    signal_to_return = "WAIT ⏳ (Pullback Missed)"
+                    signal_to_return = "WAIT (Pullback Missed)"
                 elif not is_triggered:
-                    signal_to_return = f"WAIT ⏳ (Waiting for Pullback to {pb_price})"
+                    signal_to_return = f"WAIT (Waiting for Pullback to {pb_price})"
 
                 if is_triggered:
                     # Bypass validation, trust the setup
@@ -236,21 +236,21 @@ def get_data():
                     
                     # Check constraints before execution (Trend rule REMOVED)
                     if trade_count >= max_trades_today:
-                        signal_to_return = f"BLOCKED 🚫 (Daily Limit {max_trades_today} Reached)"
+                        signal_to_return = f"BLOCKED (Daily Limit {max_trades_today} Reached)"
                     else:
                         from execution.trade_tracker import check_entry
                         # Get user from session
-                        user_email = session.get("user", {}).get("email", "System Auto")
+                        user_email = (session.get("user") or {}).get("email", "System Auto")
                         check_entry(candidate_signal, *candidate_entry, trend=trend, lots=num_lots_to_trade, user_email=user_email)
                         last_traded_trend = trend
-                        signal_to_return = f"✅ AUTO EXECUTED ({trade_count + 1}/{max_trades_today}): {candidate_signal}"
+                        signal_to_return = f"AUTO EXECUTED ({trade_count + 1}/{max_trades_today}): {candidate_signal}"
                                 
             # --- NEW SETUP DETECTION (Only if no pullback active) ---
             else:
                 if trend == "UPTREND" and oi["pe_oi_change"] > oi["ce_oi_change"] and nifty_price > support:
-                    candidate_signal, candidate_entry = "EARLY BUY CALL ⚡", (nifty_price, nifty_price - 40, nifty_price + 80)
+                    candidate_signal, candidate_entry = "EARLY BUY CALL", (nifty_price, nifty_price - 40, nifty_price + 80)
                 elif trend == "DOWNTREND" and oi["ce_oi_change"] > oi["pe_oi_change"] and nifty_price < resistance:
-                    candidate_signal, candidate_entry = "EARLY BUY PUT ⚡", (nifty_price, nifty_price + 40, nifty_price - 80)
+                    candidate_signal, candidate_entry = "EARLY BUY PUT", (nifty_price, nifty_price + 40, nifty_price - 80)
                 
                 if not candidate_entry:
                     indicator_signal = signal
@@ -262,27 +262,35 @@ def get_data():
                 # Apply Professional Quality Filters
                 if candidate_entry:
                     if "Low Momentum" in warnings:
-                        signal_to_return = "WAIT ⏳ (Low Momentum)"
+                        signal_to_return = "WAIT (Low Momentum)"
                     else:
                         is_valid, reason = validate_trade(df, candidate_signal, *candidate_entry)
                         
                         if is_valid:
-                            # 🚫 Daily Limit Check
+                            # Daily Limit Check
                             if trade_count >= max_trades_today:
-                                signal_to_return = f"BLOCKED 🚫 (Daily Limit {max_trades_today} Reached)"
+                                signal_to_return = f"BLOCKED (Daily Limit {max_trades_today} Reached)"
                             else:
-                                # Setup Validated -> ENTER PULLBACK STATE
-                                pending_pullback = {
-                                    "signal": "CALL" if "CALL" in candidate_signal else "PUT",
-                                    "breakout_price": nifty_price,
-                                    "pullback_price": nifty_price - 10 if "CALL" in candidate_signal else nifty_price + 10,
-                                    "trend": trend
-                                }
-                                signal_to_return = f"WAIT ⏳ (A+ Setup. Waiting Pullback to {pending_pullback['pullback_price']})"
+                                # 🔥 HIGH MOMENTUM DIRECT ENTRY BYPASS
+                                if momentum >= 35:
+                                    from execution.trade_tracker import check_entry
+                                    user_email = (session.get("user") or {}).get("email", "System Auto")
+                                    check_entry(candidate_signal, *candidate_entry, trend=trend, lots=num_lots_to_trade, user_email=user_email)
+                                    last_traded_trend = trend
+                                    signal_to_return = f"DIRECT ENTRY (MOMENTUM): {candidate_signal}"
+                                else:
+                                    # Setup Validated -> ENTER PULLBACK STATE
+                                    pending_pullback = {
+                                        "signal": "CALL" if "CALL" in candidate_signal else "PUT",
+                                        "breakout_price": nifty_price,
+                                        "pullback_price": nifty_price - 8 if "CALL" in candidate_signal else nifty_price + 8,
+                                        "trend": trend
+                                    }
+                                    signal_to_return = f"WAIT (A+ Setup. Waiting Pullback to {pending_pullback['pullback_price']})"
                         else:
-                            signal_to_return = f"WAIT ⏳ ({reason})"
+                            signal_to_return = f"WAIT ({reason})"
                 else:
-                    signal_to_return = "WAIT ⏳ (Low Momentum)" if "Low Momentum" in warnings else "WAIT ⏳ (No Setup)"
+                    signal_to_return = "WAIT (Low Momentum)" if "Low Momentum" in warnings else "WAIT (No Setup)"
 
     else:
         signal_to_return = "OFF (System Stopped)"
@@ -326,7 +334,7 @@ def clear_trades():
         db.session.commit()
         last_traded_trend = None
         pending_pullback = None
-        print(f"🧹 Database Status: RESET ({num_deleted} trades removed)")
+        print(f"Database Status: RESET ({num_deleted} trades removed)")
         return jsonify({"status": "success", "message": f"Deleted {num_deleted} trades"})
     except Exception as e:
         db.session.rollback()
@@ -339,7 +347,7 @@ def start_trading():
     trading_active = True
     last_traded_trend = None
     pending_pullback = None
-    print("▶️ Engine Status: RUNNING (State Reset)")
+    print("Engine Status: RUNNING (State Reset)")
     return jsonify({"status": "RUNNING", "trading_active": True})
 
 
@@ -355,7 +363,7 @@ def stop_trading():
     # Manual exit all open trades
     exited_count = manual_exit_all_trades(nifty_price)
 
-    print(f"⏹ Engine Status: STOPPED ({exited_count} trades closed)")
+    print(f"Engine Status: STOPPED ({exited_count} trades closed)")
     return jsonify({"status": "STOPPED", "trading_active": False, "exited_count": exited_count})
 
 
