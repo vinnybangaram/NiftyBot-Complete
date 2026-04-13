@@ -49,11 +49,20 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='None',
 )
 
-# CORS Configuration for Production
-# Automatically trusting both local dev and various Vercel subdomains
+# CORS Configuration
 default_origins = "http://localhost:3000,http://127.0.0.1:3000,https://nifty-bot-complete.vercel.app,https://nifty-bot-complete-git-main-vinnybangarams-projects.vercel.app"
 origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", default_origins).split(",")]
 CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
+
+@app.after_request
+def ensure_cors(response):
+    origin = request.headers.get("Origin")
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    return response
 
 print(f"CORS Allowed Origins: {origins}")
 

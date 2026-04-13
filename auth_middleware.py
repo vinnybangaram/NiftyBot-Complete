@@ -12,7 +12,9 @@ PUBLIC_ROUTES = [
     "/auth/callback",
     "/logout",
     "/google",
-    "/static"
+    "/static",
+    "/me",
+    "/dev-bypass"
 ]
 
 def check_auth():
