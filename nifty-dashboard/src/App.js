@@ -30,10 +30,11 @@ const App = () => {
   useEffect(() => {
     const fetchLoop = async () => {
       try {
+        const token = localStorage.getItem("token");
+        const fetchOptions = { credentials: 'include' };
+        if (token) fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
 
-        const res = await fetch(`${API}/data?date=${exportDate}&interval=${interval}`, {
-          credentials: 'include'
-        });
+        const res = await fetch(`${API}/data?date=${exportDate}&interval=${interval}`, fetchOptions);
 
         if (res.status === 401) {
           setIsAuthenticated(false);
@@ -65,13 +66,26 @@ const App = () => {
 
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${API}/me`, { credentials: 'include' });
+        const token = localStorage.getItem("token");
+        const fetchOptions = { credentials: 'include' };
+        if (token) fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
+
+        const res = await fetch(`${API}/me`, fetchOptions);
         if (res.ok) {
           const json = await res.json();
           setUser(json.user);
         }
       } catch (err) { console.error("User fetch failed", err); }
     };
+
+    // 🏆 Capture token from URL after login
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      localStorage.setItem("token", tokenFromUrl);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     fetchLoop();
     if (isAuthenticated && !user) fetchUser();
@@ -108,9 +122,9 @@ const App = () => {
     });
   };
 
-
   const handleLogout = async () => {
     try {
+      localStorage.removeItem("token");
       await fetch(`${API}/logout`, { credentials: 'include' });
       setIsAuthenticated(false);
       setUser(null);
