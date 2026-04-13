@@ -42,6 +42,13 @@ from execution.trade_tracker import (
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key")
 
+# Session Security for Cross-Origin (Vercel -> Render)
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='None',
+)
+
 # CORS Configuration for Production
 # Automatically trusting both local dev and the known Vercel production domain
 default_origins = "http://localhost:3000,https://nifty-bot-complete.vercel.app"
