@@ -43,8 +43,12 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key")
 
 # CORS Configuration for Production
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Automatically trusting both local dev and the known Vercel production domain
+default_origins = "http://localhost:3000,https://nifty-bot-complete.vercel.app"
+origins = os.getenv("ALLOWED_ORIGINS", default_origins).split(",")
 CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
+
+print(f"🌍 CORS Allowed Origins: {origins}")
 
 # Authentication Integration
 from auth import auth_bp, google_bp
