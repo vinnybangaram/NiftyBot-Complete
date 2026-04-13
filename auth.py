@@ -111,7 +111,8 @@ def callback():
     print(f"[{datetime.now()}] LOGIN SUCCESS: {email} (Daily logins: {login_stats['count']})")
     
     # Redirect back to the React Dashboard
-    return redirect("http://localhost:3000")
+    frontend_url = os.getenv("FRONTEND_URL", "https://nifty-bot-complete.vercel.app")
+    return redirect(frontend_url)
 
 @auth_bp.route("/logout")
 def logout():
