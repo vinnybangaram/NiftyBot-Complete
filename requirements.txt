@@ -12,6 +12,3 @@ requests
 twilio
 gunicorn
 openpyxl
-flask-dance
-pyjwt
-python-dotenv
