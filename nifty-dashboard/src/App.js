@@ -21,6 +21,7 @@ const App = () => {
   const [viewport, setViewport] = useState({ start: 0, end: 0 });
   const [showOptionChain, setShowOptionChain] = useState(false);
 
+  const [error, setError] = useState(null);
   const API = window.location.port === "3000" ? `http://${window.location.hostname}:5000` : "";
   useEffect(() => {
     const fetchLoop = async () => {
@@ -46,7 +47,11 @@ const App = () => {
           }
         }
         setData(json);
-      } catch (err) { console.error(err); }
+        setError(null);
+      } catch (err) { 
+        console.error("Connection Error:", err); 
+        setError("BACKEND DISCONNECTED - Check if python app.py is running");
+      }
     };
 
     fetchLoop();
@@ -104,6 +109,20 @@ const App = () => {
       window.location.reload();
     }
   };
+
+  if (error) return (
+    <div className="d-flex flex-column justify-content-center align-items-center vh-100 text-center" style={{ background: '#020617' }}>
+      <div className="rounded-circle bg-danger bg-opacity-25 p-4 mb-4">
+        <i className="bi bi-wifi-off display-1 text-danger"></i>
+      </div>
+      <h2 className="text-white fw-bold ls-2 uppercase mb-2">SYSTEM OFFLINE</h2>
+      <div className="text-danger fw-bold mb-4 px-4" style={{ maxWidth: '400px' }}>{error}</div>
+      <div className="text-secondary small font-monospace">
+        Attempting to reconnect in 5 seconds...<br/>
+        Target: {API || "Self-Host"}/data
+      </div>
+    </div>
+  );
 
   if (!data) return (
     <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: '#020617' }}>

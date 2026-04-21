@@ -50,6 +50,14 @@ with app.app_context():
     db.create_all()
     
 
+@app.route("/api/status")
+def status():
+    return jsonify({
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "trading_active": trading_active
+    })
+
 
 @app.route("/data")
 def get_data():
