@@ -21,7 +21,7 @@ const App = () => {
   const [viewport, setViewport] = useState({ start: 0, end: 0 });
   const [showOptionChain, setShowOptionChain] = useState(false);
 
-  const API = "http://127.0.0.1:5000";
+  const API = window.location.port === "3000" ? `http://${window.location.hostname}:5000` : "";
   useEffect(() => {
     const fetchLoop = async () => {
       try {
@@ -130,7 +130,7 @@ const App = () => {
               </div>
               <div className="modal-body text-center py-5">
                 <div className="mb-4">
-                  <span className={`display-5 fw-bold ${data.pending_trade.signal.includes("CALL") ? "neon-text-success" : "neon-text-danger"}`}>
+                  <span className={`display-5 fw-bold ${(data.pending_trade?.signal || "").includes("CALL") ? "neon-text-success" : "neon-text-danger"}`}>
                     {data.pending_trade.signal}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ const App = () => {
               <div className="d-none d-md-flex align-items-center gap-2 border-end border-secondary border-opacity-50 pe-4">
                 <div className="text-end">
                   <span className="text-secondary x-small fw-bold d-block text-uppercase ls-2">Status Signal</span>
-                  <span className={data.signal.includes("WAIT") ? "text-secondary fw-bold fs-5" : "neon-text-warning fw-bold fs-5"}>{data.signal}</span>
+                  <span className={(data.signal || "").includes("WAIT") ? "text-secondary fw-bold fs-5" : "neon-text-warning fw-bold fs-5"}>{data.signal}</span>
                 </div>
               </div>
               <div className="ps-2">
@@ -413,7 +413,7 @@ const App = () => {
                       </td>
                       <td className="text-center">
                         <span className={`badge rounded-pill px-4 py-2 fw-bold text-uppercase ls-1 ${t.status === "OPEN" ? 'bg-info bg-opacity-25 text-info border border-info border-opacity-25 glow-primary' :
-                          t.status.includes('TARGET') ? 'neon-success text-white' :
+                          t.status?.includes('TARGET') ? 'neon-success text-white' :
                             'neon-danger text-white'
                           }`}>
                           {t.status}

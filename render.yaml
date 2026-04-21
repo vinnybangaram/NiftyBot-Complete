@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: niftybot-ai
+    env: docker
+    plan: free
+    region: ohio
+    healthCheckPath: /api/status
+    envVars:
+      - key: PORT
+        value: 5000

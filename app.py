@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os
 from datetime import datetime
@@ -27,7 +27,7 @@ from execution.trade_tracker import (
 
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Database Configuration
@@ -49,20 +49,6 @@ pending_pullback = None
 with app.app_context():
     db.create_all()
     
-@app.route("/")
-def home():
-    return jsonify({
-        "message": "Nifty Bot API is LIVE 🚀",
-        "endpoints": [
-            "/data",
-            "/start",
-            "/stop",
-            "/trades",
-            "/export",
-            "/confirm",
-            "/reject"
-        ]
-    })
 
 
 @app.route("/data")
@@ -159,24 +145,10 @@ def get_data():
                 if active_trades >= 5:
                     signal_to_return = "BLOCKED 🚫 (Max Active Trades)"
                 else:
-                    trade_count = get_trade_count_today()
-                    if trade_count == 0:
-                        from execution.trade_tracker import check_entry
-                        check_entry(candidate_signal, *candidate_entry, trend=trend)
-                        last_traded_trend = trend
-                        signal_to_return = f"AUTO ENTRIED: {candidate_signal}"
-                    else:
-                        global awaiting_confirmation, pending_trade
-                        if not awaiting_confirmation:
-                            awaiting_confirmation = True
-                            pending_trade = {
-                                "signal": candidate_signal,
-                                "entry": candidate_entry[0],
-                                "sl": candidate_entry[1],
-                                "target": candidate_entry[2],
-                                "trend": trend
-                            }
-                        signal_to_return = f"AWAITING SIGNATURE: {candidate_signal}"
+                    from execution.trade_tracker import check_entry
+                    check_entry(candidate_signal, *candidate_entry, trend=trend)
+                    last_traded_trend = trend
+                    signal_to_return = f"AUTO ENTRIED: {candidate_signal}"
                             
         # --- NEW SETUP DETECTION (Only if no pullback active) ---
         else:
@@ -378,6 +350,16 @@ def export():
 
 
 
+
+
+# Serve React App
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 
 if __name__ == "__main__":
