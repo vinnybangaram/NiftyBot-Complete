@@ -371,5 +371,15 @@ def serve(path):
 
 
 if __name__ == "__main__":
+    import socket
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
     port = int(os.environ.get("PORT", 5000))
+    
+    print("\n" + "="*50)
+    print(f"🚀 NiftyBot AI is LIVE!")
+    print(f"💻 Local Access: http://localhost:{port}")
+    print(f"📱 Network Access: http://{local_ip}:{port}")
+    print("="*50 + "\n")
+    
     app.run(host="0.0.0.0", port=port)

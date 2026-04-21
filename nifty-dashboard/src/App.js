@@ -22,7 +22,9 @@ const App = () => {
   const [showOptionChain, setShowOptionChain] = useState(false);
 
   const [error, setError] = useState(null);
-  const API = window.location.port === "3000" ? `http://${window.location.hostname}:5000` : "";
+  // Use REACT_APP_API_URL if set, otherwise fallback to local/auto detection
+  const API = process.env.REACT_APP_API_URL || 
+             (window.location.port === "3000" ? `http://${window.location.hostname}:5000` : "");
   useEffect(() => {
     const fetchLoop = async () => {
       try {
@@ -57,7 +59,7 @@ const App = () => {
     fetchLoop();
     const timer = setInterval(fetchLoop, 5000);
     return () => clearInterval(timer);
-  }, [exportDate, interval, viewport.end]);
+  }, [exportDate, interval, viewport.end, API]);
 
   const visiblePrices = useMemo(() => {
     if (!data?.chart_processed) return { min: 22000, max: 23000 };
